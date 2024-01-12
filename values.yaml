@@ -1,0 +1,72 @@
+image:
+  registry: registry.gitlab.com
+  image: gitlab-org/gitlab-runner
+useTini: false
+imagePullPolicy: IfNotPresent
+gitlabUrl: https://gitlab.com/
+runnerRegistrationToken: "<your gitlab token>" # Replace with your token
+terminationGracePeriodSeconds: 3600
+concurrent: 10
+shutdown_timeout: 0
+checkInterval: 30
+sessionServer:
+  enabled: false
+## For RBAC support:
+rbac:
+  create: true
+  rules:
+  - apiGroups: [""]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["extensions", "apps", "autoscaling", "batch"]
+    resources: ["*"]
+    verbs: ["*"]
+  ## cluster-wide or only within namespace
+  clusterWideAccess: true
+  serviceAccountName: gitlab-runner
+  podSecurityPolicy:
+    enabled: false
+    # resourceNames:
+    # - gitlab-runner
+##
+service:
+  enabled: false
+  type: ClusterIP
+##
+runners:
+  config: |
+    [[runners]]
+      [runners.kubernetes]
+        namespace = "{{.Release.Namespace}}"
+        image = "alpine"
+        service_account = "gitlab-runner"
+  configPath: ""
+  cache: {}
+##
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  privileged: false
+  capabilities:
+    drop: ["ALL"]
+##
+strategy: {}
+
+podSecurityContext:
+  runAsUser: 100
+  # runAsGroup: 65533
+  fsGroup: 65533
+
+##
+resources:
+  limits:
+    memory: 256Mi
+    cpu: 200m
+    ephemeral-storage: 512Mi
+  requests:
+    memory: 128Mi
+    cpu: 100m
+    ephemeral-storage: 256Mi
+
+affinity: {}
